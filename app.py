@@ -182,7 +182,8 @@ with st.sidebar:
              api_key = st.secrets["gcp_service_account"].get("news_api_key")
         
         if api_key:
-            url = f"https://newsapi.org/v2/everything?q=ecommerce+marketing&sortBy=publishedAt&apiKey={api_key}&language=en&pageSize=3"
+            # Broader query to ensure results
+            url = f"https://newsapi.org/v2/everything?q=marketing&sortBy=publishedAt&apiKey={api_key}&language=en&pageSize=3"
             news = requests.get(url).json()
             
             if news.get('articles'):
