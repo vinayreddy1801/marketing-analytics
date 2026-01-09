@@ -164,6 +164,9 @@ with st.sidebar:
                 st.info("No news found")
         else:
              st.warning("News API Key missing in secrets")
+            
+    except Exception:
+        st.warning("News feed unavailable")
 
 # Load Data with Date Filter
 try:
