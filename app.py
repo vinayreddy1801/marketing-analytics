@@ -134,10 +134,28 @@ def load_data(start_date=None, end_date=None):
 # -----------------
 # SIDEBAR
 # -----------------
+from datetime import date, timedelta
+
+# ... (Previous imports)
+
+# -----------------
+# SIDEBAR
+# -----------------
 with st.sidebar:
     st.title("Admin Controls")
     st.markdown("---")
-    date_range = st.date_input("Analysis Window", [])
+    
+    # Date Picker with Defaults to prevent UI Glitches
+    today = date.today()
+    default_start = today - timedelta(days=30)
+    min_date = date(2019, 1, 1) # Start of TheLook data
+    
+    date_range = st.date_input(
+        "Analysis Window", 
+        value=(default_start, today),
+        min_value=min_date,
+        max_value=today
+    )
     
     start_date = None
     end_date = None
