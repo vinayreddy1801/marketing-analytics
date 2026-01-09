@@ -298,15 +298,22 @@ st.info(f"📅 Active Date Range: {start_date} to {end_date}")
 
 # Debugging: RAW CHECK (Unfiltered)
 # We run a tiny separate query to prove connection to Test Data, ignoring date filters
-client = bigquery.Client(credentials=service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"]))
-debug_sql = "SELECT * FROM `marketing-ops-portfolio.portfolio_staging.marketing_spend` WHERE utm_source = 'Test_Channel'"
-df_debug = client.query(debug_sql).to_dataframe()
+# Use explicit credentials from secrets
+creds = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+client = bigquery.Client(credentials=creds, project=creds.project_id)
 
-if not df_debug.empty:
-    st.warning("⚠️ PROOF MODE: Test Data Exists in BigQuery (ignoring filters)")
-    st.dataframe(df_debug)
-else:
-    st.error("Test Data NOT found in BigQuery (Check project/dataset names)")
+st.info(f"Connected to Project: `{client.project}`")
+
+debug_sql = "SELECT * FROM `marketing-ops-portfolio.portfolio_staging.marketing_spend` WHERE utm_source = 'Test_Channel'"
+try:
+    df_debug = client.query(debug_sql).to_dataframe()
+    if not df_debug.empty:
+        st.warning("⚠️ PROOF MODE: Test Data Exists in BigQuery (ignoring filters)")
+        st.dataframe(df_debug)
+    else:
+        st.error(f"Test Data NOT found. table: `marketing_spend` row_count: {df_debug.shape[0]}")
+except Exception as e:
+    st.error(f"Debug Query Failed: {e}")
 
 # Funnel Visualization
 st.subheader("Conversion Funnel Analysis")
