@@ -290,6 +290,11 @@ with c2:
 
 st.markdown("---")
 
+# Debugging: Show raw cost data if "Test_Channel" exists
+if 'Test_Channel' in df_master['traffic_source'].values:
+    st.warning("⚠️ PROOF MODE: Test Data Detected (Test_Channel)")
+    st.write(df_master[df_master['traffic_source'] == 'Test_Channel'])
+
 # Funnel Visualization
 st.subheader("Conversion Funnel Analysis")
 st.caption("Session drop-off from Product View to Purchase (Last 90 Days)")
