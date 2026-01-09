@@ -192,12 +192,7 @@ except Exception as e:
     st.error(f"Data Connection Error: {e}")
     st.stop()
 
-# -----------------
-# SIDEBAR
-# -----------------
-            
-    except Exception:
-        st.warning("News feed unavailable")
+
 
 # -----------------
 # MAIN DASHBOARD
