@@ -45,8 +45,11 @@ st.markdown("""
 # -----------------
 # DATA LOADING
 # -----------------
+# -----------------
+# DATA LOADING
+# -----------------
 @st.cache_data(ttl=3600)
-def load_data():
+def load_data(start_date=None, end_date=None):
     # Authentication
     # Use st.secrets if available (Cloud), else local JSON
     if "gcp_service_account" in st.secrets:
@@ -59,54 +62,119 @@ def load_data():
     
     client = bigquery.Client(credentials=creds, project=creds.project_id)
 
+    # Date Filter Clause
+    date_filter = ""
+    if start_date and end_date:
+        date_filter = f"AND date BETWEEN '{start_date}' AND '{end_date}'"
+        # For TheLook data which uses created_at timestamp
+        timestamp_filter = f"AND created_at BETWEEN '{start_date}' AND '{end_date}'"
+        # For order_items and events
+        o_timestamp_filter = f"AND o.created_at BETWEEN '{start_date}' AND '{end_date}'"
+        e_timestamp_filter = f"AND e.created_at BETWEEN '{start_date}' AND '{end_date}'"
+    else:
+        timestamp_filter = ""
+        o_timestamp_filter = ""
+        e_timestamp_filter = ""
+
+
     # 1. Fetch Attribution Query (Revenue)
+    # Inject Date Filter into the SQL
     with open('attribution_query.sql', 'r') as f:
-        sql = f.read()
+        base_sql = f.read()
+    
+    # Inject Date Filter
+    if start_date and end_date:
+        sql = base_sql.replace("-- DATE_FILTER_PLACEHOLDER", f"AND o.created_at BETWEEN '{start_date}' AND '{end_date}'")
+    else:
+        sql = base_sql.replace("-- DATE_FILTER_PLACEHOLDER", "")
+    
     df_revenue = client.query(sql).to_dataframe()
 
     # 2. Fetch Marketing Spend (Cost)
-    # Aggregating by channel for simple join
-    sql_cost = """
+    sql_cost = f"""
         SELECT 
             utm_source as traffic_source, 
             SUM(cost) as total_cost,
             SUM(clicks) as total_clicks,
             SUM(impressions) as total_impressions 
         FROM `marketing-ops-portfolio.portfolio_staging.marketing_spend`
+        WHERE 1=1 {date_filter}
         GROUP BY 1
     """
     df_cost = client.query(sql_cost).to_dataframe()
     
     # 3. Fetch Last Click Revenue
-    sql_last_click = """
+    sql_last_click = f"""
         SELECT 
             traffic_source,
             SUM(sale_price) as last_click_revenue
         FROM `bigquery-public-data.thelook_ecommerce.order_items` o
         JOIN `bigquery-public-data.thelook_ecommerce.users` u ON o.user_id = u.id
         WHERE o.status NOT IN ('Cancelled', 'Returned')
+        {o_timestamp_filter}
         GROUP BY 1
     """
     df_last_click = client.query(sql_last_click).to_dataframe()
 
     # 4. Fetch Funnel Data
-    sql_funnel = """
+    sql_funnel = f"""
         SELECT 
             traffic_source,
             event_type,
             COUNT(DISTINCT session_id) as sessions
-        FROM `bigquery-public-data.thelook_ecommerce.events`
+        FROM `bigquery-public-data.thelook_ecommerce.events` e
         WHERE event_type IN ('product', 'cart', 'purchase')
-        AND created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 90 DAY)
+        {e_timestamp_filter}
         GROUP BY 1, 2
     """
     df_funnel = client.query(sql_funnel).to_dataframe()
 
     return df_revenue, df_cost, df_last_click, df_funnel
 
-# Load Data
+# -----------------
+# SIDEBAR
+# -----------------
+with st.sidebar:
+    st.title("Admin Controls")
+    st.markdown("---")
+    date_range = st.date_input("Analysis Window", [])
+    
+    start_date = None
+    end_date = None
+    if len(date_range) == 2:
+        start_date = date_range[0]
+        end_date = date_range[1]
+    
+    st.markdown("### Real-Time Market News")
+    # NewsAPI Integration
+    try:
+        # Check both top-level and nested to be safe
+        api_key = st.secrets.get("news_api_key")
+        
+        if api_key:
+            url = f"https://newsapi.org/v2/everything?q=ecommerce+marketing&sortBy=publishedAt&apiKey={api_key}&language=en&pageSize=3"
+            news = requests.get(url).json()
+            
+            if news.get('articles'):
+                for article in news['articles']:
+                    st.markdown(f"**[{article['title']}]({article['url']})**")
+                    st.caption(f"Source: {article['source']['name']}")
+                    st.markdown("---")
+            else:
+                st.info("No news found")
+        else:
+             st.warning("News API Key missing in secrets")
+
+# Load Data with Date Filter
 try:
-    df_revenue, df_cost, df_last_click, df_funnel = load_data()
+    df_revenue, df_cost, df_last_click, df_funnel = load_data(start_date, end_date)
+    
+    # Filter Attribution Data (df_revenue) via Pandas since we didn't inject SQL
+    # Note: df_revenue needs a date column to filter! The current query sums it up.
+    # We need to modify the attribution query to return daily data if we want to filter it here, 
+    # OR we ignore date filter for attribution structure for now (awkward).
+    # Let's modify attribution_query.sql to Return Order Date so we can filter.
+
     
     # Merge Data for Master Table
     # Left join because Organic has revenue but no cost
@@ -127,29 +195,6 @@ except Exception as e:
 # -----------------
 # SIDEBAR
 # -----------------
-with st.sidebar:
-    st.title("Admin Controls")
-    st.markdown("---")
-    date_range = st.date_input("Analysis Window", [])
-    
-    st.markdown("### Real-Time Market News")
-    # NewsAPI Integration
-    try:
-        if "news_api_key" in st.secrets:
-            api_key = st.secrets["news_api_key"]
-            
-            url = f"https://newsapi.org/v2/everything?q=ecommerce+marketing&sortBy=publishedAt&apiKey={api_key}&language=en&pageSize=3"
-            news = requests.get(url).json()
-            
-            if news.get('articles'):
-                for article in news['articles']:
-                    st.markdown(f"**[{article['title']}]({article['url']})**")
-                    st.caption(f"Source: {article['source']['name']}")
-                    st.markdown("---")
-            else:
-                st.info("No news found")
-        else:
-             st.warning("News API Key missing in secrets")
             
     except Exception:
         st.warning("News feed unavailable")
