@@ -232,7 +232,7 @@ except Exception as e:
 # MAIN DASHBOARD
 # -----------------
 
-st.title("Executive Marketing Command Center")
+st.title("Executive Marketing Command Center v1.1 (Debug)")
 st.markdown("Real-time performance monitoring across all acquisition channels.")
 
 # KPI Row
