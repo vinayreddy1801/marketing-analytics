@@ -291,10 +291,22 @@ with c2:
 
 st.markdown("---")
 
-# Debugging: Show raw cost data if "Test_Channel" exists
-if 'Test_Channel' in df_master['traffic_source'].values:
-    st.warning("⚠️ PROOF MODE: Test Data Detected (Test_Channel)")
-    st.write(df_master[df_master['traffic_source'] == 'Test_Channel'])
+st.markdown("---")
+
+# Debugging Info
+st.info(f"📅 Active Date Range: {start_date} to {end_date}")
+
+# Debugging: RAW CHECK (Unfiltered)
+# We run a tiny separate query to prove connection to Test Data, ignoring date filters
+client = bigquery.Client(credentials=service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"]))
+debug_sql = "SELECT * FROM `marketing-ops-portfolio.portfolio_staging.marketing_spend` WHERE utm_source = 'Test_Channel'"
+df_debug = client.query(debug_sql).to_dataframe()
+
+if not df_debug.empty:
+    st.warning("⚠️ PROOF MODE: Test Data Exists in BigQuery (ignoring filters)")
+    st.dataframe(df_debug)
+else:
+    st.error("Test Data NOT found in BigQuery (Check project/dataset names)")
 
 # Funnel Visualization
 st.subheader("Conversion Funnel Analysis")
