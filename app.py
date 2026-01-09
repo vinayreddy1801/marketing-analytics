@@ -163,11 +163,23 @@ with st.sidebar:
         start_date = date_range[0]
         end_date = date_range[1]
     
+    # Debug Secrets (Remove in Production)
+    # with st.expander("Debug Secrets"):
+    #     st.write(st.secrets.keys())
+        
     st.markdown("### Real-Time Market News")
     # NewsAPI Integration
     try:
         # Check both top-level and nested to be safe
-        api_key = st.secrets.get("news_api_key")
+        # st.secrets behaves like a dictionary.
+        # If news_api_key is at the top level it should be accessible.
+        
+        api_key = None
+        if "news_api_key" in st.secrets:
+            api_key = st.secrets["news_api_key"]
+        elif "gcp_service_account" in st.secrets and "news_api_key" in st.secrets["gcp_service_account"]:
+             # Fallback if user nested it inside [gcp_service_account] by accident
+             api_key = st.secrets["gcp_service_account"].get("news_api_key")
         
         if api_key:
             url = f"https://newsapi.org/v2/everything?q=ecommerce+marketing&sortBy=publishedAt&apiKey={api_key}&language=en&pageSize=3"
