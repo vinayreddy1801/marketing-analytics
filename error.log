@@ -1,0 +1,2 @@
+TYPE: Forbidden
+MSG: 403 POST https://bigquery.googleapis.com/bigquery/v2/projects/marketing-ops-portfolio/datasets?prettyPrint=false: Access Denied: Project marketing-ops-portfolio: User does not have bigquery.datasets.create permission in project marketing-ops-portfolio.
