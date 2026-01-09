@@ -7,7 +7,7 @@
 A "Full Stack Analytics" portfolio project demonstrating end-to-end data engineering, advanced SQL logic, and interactive dashboard development. This project moves beyond static CSV analysis to simulate a modern enterprise data stack.
 
 ## 📊 Live Dashboard
-**(Link to your deployed Streamlit Cloud app goes here after deployment)**
+**[View Live App](https://marketing-analytics-01.streamlit.app/)**
 
 ## 💼 Business Scenario
 **Situation:** Marketing data was fragmented between advertising platforms (Spend) and the data warehouse (Revenue), leading to inaccurate budget allocation using default "Last-Click" attribution.
