@@ -211,11 +211,11 @@ try:
 
     
     # Merge Data for Master Table
-    # Left join because Organic has revenue but no cost
-    df_master = df_revenue.merge(df_cost, on='traffic_source', how='left')
+    # OUTER JOIN to include channels that have Spend but no Revenue (e.g. Test_Channel)
+    df_master = df_revenue.merge(df_cost, on='traffic_source', how='outer')
     df_master = df_master.merge(df_last_click, on='traffic_source', how='left')
     
-    # Handle NaNs (Organic cost = 0)
+    # Handle NaNs
     df_master.fillna(0, inplace=True)
     
     # Calculate ROAS and CPA
