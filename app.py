@@ -278,11 +278,17 @@ with c1:
 
 with c2:
     st.subheader("Channel Efficiency (ROAS)")
+    # Scatter: Filter out 0 cost, and ensure size is valid
+    df_scatter = df_master[df_master['total_cost'] > 0].copy()
+    # Plotly crashes if size column is all 0s or contains NaNs. 
+    # Add a small epsilon or default size if conversions are 0.
+    df_scatter['plot_size'] = df_scatter['attributed_conversions'].apply(lambda x: max(x, 1))
+
     fig_scatter = px.scatter(
-        df_master[df_master['total_cost'] > 0],
+        df_scatter,
         x='total_cost',
         y='time_decay_revenue',
-        size='attributed_conversions',
+        size='plot_size',
         color='traffic_source',
         template="plotly_dark",
         labels={'total_cost': 'Spend', 'time_decay_revenue': 'Revenue'}
