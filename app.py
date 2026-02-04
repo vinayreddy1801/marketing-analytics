@@ -216,6 +216,12 @@ try:
     df_master = df_master.merge(df_last_click, on='traffic_source', how='left')
     
     # Handle NaNs
+    # Ensure numeric columns are actually numeric (handling potential SQL NULLs or Nones)
+    numeric_cols = ['time_decay_revenue', 'total_cost', 'attributed_conversions', 'clicks', 'impressions', 'last_click_revenue']
+    for col in numeric_cols:
+        if col in df_master.columns:
+            df_master[col] = pd.to_numeric(df_master[col], errors='coerce').fillna(0)
+
     df_master.fillna(0, inplace=True)
     
     # Calculate ROAS and CPA
