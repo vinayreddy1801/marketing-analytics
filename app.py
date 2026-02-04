@@ -210,6 +210,17 @@ try:
     # Let's modify attribution_query.sql to Return Order Date so we can filter.
 
     
+    # Standardize traffic_source to ensure correct merging
+    # Some sources might be lowercase 'search' vs 'Search'. Title case handles most disputes.
+    if not df_revenue.empty and 'traffic_source' in df_revenue.columns:
+        df_revenue['traffic_source'] = df_revenue['traffic_source'].str.title()
+    
+    if not df_cost.empty and 'traffic_source' in df_cost.columns:
+        df_cost['traffic_source'] = df_cost['traffic_source'].str.title()
+
+    if not df_last_click.empty and 'traffic_source' in df_last_click.columns:
+        df_last_click['traffic_source'] = df_last_click['traffic_source'].str.title()
+        
     # Merge Data for Master Table
     # OUTER JOIN to include channels that have Spend but no Revenue (e.g. Test_Channel)
     df_master = df_revenue.merge(df_cost, on='traffic_source', how='outer')
