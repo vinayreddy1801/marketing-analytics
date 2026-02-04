@@ -232,11 +232,7 @@ try:
     df_master = df_revenue.merge(df_cost, on='traffic_source', how='outer')
     df_master = df_master.merge(df_last_click, on='traffic_source', how='left')
 
-    # Debug Data (Hidden by default)
-    with st.expander("Show Raw Data for Debugging"):
-        st.write("df_revenue", df_revenue)
-        st.write("df_cost", df_cost)
-        st.write("df_master state", df_master)
+
     
     # Handle NaNs
     # Ensure numeric columns are actually numeric (handling potential SQL NULLs or Nones)
