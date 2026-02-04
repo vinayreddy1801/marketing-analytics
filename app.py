@@ -290,16 +290,19 @@ with c2:
     # Add a small epsilon or default size if conversions are 0.
     df_scatter['plot_size'] = df_scatter['attributed_conversions'].apply(lambda x: max(x, 1))
 
-    fig_scatter = px.scatter(
-        df_scatter,
-        x='total_cost',
-        y='time_decay_revenue',
-        size='plot_size',
-        color='traffic_source',
-        template="plotly_dark",
-        labels={'total_cost': 'Spend', 'time_decay_revenue': 'Revenue'}
-    )
-    st.plotly_chart(fig_scatter, use_container_width=True)
+    if not df_scatter.empty:
+        fig_scatter = px.scatter(
+            df_scatter,
+            x='total_cost',
+            y='time_decay_revenue',
+            size='plot_size',
+            color='traffic_source',
+            template="plotly_dark",
+            labels={'total_cost': 'Spend', 'time_decay_revenue': 'Revenue'}
+        )
+        st.plotly_chart(fig_scatter, use_container_width=True)
+    else:
+        st.info("No spend data available for Scatter Plot")
 
 st.markdown("---")
 
