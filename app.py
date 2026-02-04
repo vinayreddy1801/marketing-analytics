@@ -213,18 +213,24 @@ try:
     # Standardize traffic_source to ensure correct merging
     # Some sources might be lowercase 'search' vs 'Search'. Title case handles most disputes.
     if not df_revenue.empty and 'traffic_source' in df_revenue.columns:
-        df_revenue['traffic_source'] = df_revenue['traffic_source'].str.title()
+        df_revenue['traffic_source'] = df_revenue['traffic_source'].str.strip().str.title()
     
     if not df_cost.empty and 'traffic_source' in df_cost.columns:
-        df_cost['traffic_source'] = df_cost['traffic_source'].str.title()
+        df_cost['traffic_source'] = df_cost['traffic_source'].str.strip().str.title()
 
     if not df_last_click.empty and 'traffic_source' in df_last_click.columns:
-        df_last_click['traffic_source'] = df_last_click['traffic_source'].str.title()
+        df_last_click['traffic_source'] = df_last_click['traffic_source'].str.strip().str.title()
         
     # Merge Data for Master Table
     # OUTER JOIN to include channels that have Spend but no Revenue (e.g. Test_Channel)
     df_master = df_revenue.merge(df_cost, on='traffic_source', how='outer')
     df_master = df_master.merge(df_last_click, on='traffic_source', how='left')
+
+    # Debug Data (Hidden by default)
+    with st.expander("Show Raw Data for Debugging"):
+        st.write("df_revenue", df_revenue)
+        st.write("df_cost", df_cost)
+        st.write("df_master state", df_master)
     
     # Handle NaNs
     # Ensure numeric columns are actually numeric (handling potential SQL NULLs or Nones)
