@@ -208,6 +208,12 @@ try:
     # We need to modify the attribution query to return daily data if we want to filter it here, 
     # OR we ignore date filter for attribution structure for now (awkward).
     # Let's modify attribution_query.sql to Return Order Date so we can filter.
+    
+    # Check for empty data and warn user
+    if df_cost.empty:
+        st.warning(f"⚠️ No Marketing Spend data found between {start_date} and {end_date}. Try a wider date range.")
+    if df_revenue.empty:
+        st.warning(f"⚠️ No Revenue data found between {start_date} and {end_date}.")
 
     
     # Standardize traffic_source to ensure correct merging
